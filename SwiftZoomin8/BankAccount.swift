@@ -1,7 +1,7 @@
 import Foundation
 
 actor BankAccount {
-    enum BankAccountError: Error {
+    enum WithdrawError: Error {
         case insufficientBalance
     }
     private var balance: Int = 0
@@ -9,22 +9,27 @@ actor BankAccount {
     func getInterest(with rate: Double) -> Int {
         deposit(amount: Int(Double(balance) * rate))
     }
+
+    @discardableResult
     func deposit(amount: Int)  -> Int {
+        precondition(amount >= 0)
         balance += amount
         return balance
     }
 
+    @discardableResult
     func withdraw(amount: Int) throws -> Int {
-        if balance - amount < 0 {
-            throw BankAccountError.insufficientBalance
+        precondition(amount >= 0)
+        guard balance >= amount else {
+            throw WithdrawError.insufficientBalance
         }
         balance -= amount
         return balance
     }
 
-    func transfer(amount: Int, to account: BankAccount) async throws -> Int {
-        _ = try withdraw(amount: amount)
-        return await account.deposit(amount: amount)
+    func transfer(amount: Int, to account: BankAccount) async throws {
+        try withdraw(amount: amount)
+        await account.deposit(amount: amount)
     }
 }
 
