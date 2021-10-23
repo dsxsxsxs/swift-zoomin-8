@@ -4,8 +4,7 @@ actor BankAccount {
     private var balance: Int = 0
 
     func getInterest(with rate: Double) -> Int {
-        let interest = Double(balance) * rate
-        return deposit(amount: Int(interest))
+        deposit(amount: Int(Double(balance) * rate))
     }
     func deposit(amount: Int)  -> Int {
         balance += amount
