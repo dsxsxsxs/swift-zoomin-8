@@ -41,14 +41,14 @@ final class UserViewController: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
+
         // User の JSON の取得
-        let url: URL = .init(string: "https://koherent.org/fake-service/api/user?id=\(id)")!
         Task {
             do {
-                let data = try await downloadData(from: url)
-                // JSON のデコード
-                let user: User = try JSONDecoder().decode(User.self, from: data)
+                let url: URL = .init(string: "https://koherent.org/fake-service/api/user?id=\(id)")!
+
+                let userData = try await downloadData(from: url)
+                let user: User = try JSONDecoder().decode(User.self, from: userData)
                 // View への反映
                 title = user.name
                 nameLabel.text = user.name
