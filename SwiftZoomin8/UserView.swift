@@ -25,7 +25,7 @@ struct UserView: View {
             }
             .frame(width: 80, height: 80)
             .clipShape(Circle())
-            .overlay(Circle().stroke(Color(uiColor: .systemGray)))
+            .overlay(Circle().stroke(Color(uiColor: .systemGray), lineWidth: 4))
 
 
             if let name = state.user?.name {
