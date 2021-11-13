@@ -70,3 +70,5 @@ final class UserViewController: UIViewController {
         
     }
 }
+
+extension Published.Publisher: @unchecked Sendable {}
