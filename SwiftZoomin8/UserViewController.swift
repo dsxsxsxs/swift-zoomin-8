@@ -44,21 +44,29 @@ final class UserViewController: UIViewController {
     }
 
     private func setupBindings() {
-        Task {
-            await userViewState.$user
-                .receive(on: DispatchQueue.main)
-                .sink(receiveValue: { [weak self] in
-                    self?.nameLabel.text = $0?.name
-                })
-                .store(in: &cancellables)
-
-            await userViewState.$iconImage
-                .receive(on: DispatchQueue.main)
-                .sink(receiveValue: { [weak self] in
-                    self?.iconImageView.image = $0
-                })
-                .store(in: &cancellables)
+        do { // do block to reuse task name.
+            let task = Task { [weak self] in
+                guard let state = self?.userViewState else { return }
+                for await user in await state.$user.values {
+                    self?.nameLabel.text = user?.name
+                }
+            }
+            cancellables.insert(.init({ task.cancel() }))
         }
+
+        do {
+            let task = Task { [weak self] in
+                guard let state = self?.userViewState else { return }
+                // don't unwrap self before entering the infinite loop below, or it gonna leak
+                for await icon in await state.$iconImage.values {
+                    guard let self = self else { return }
+                    self.iconImageView.image = icon
+                }
+            }
+            cancellables.insert(.init({ task.cancel() }))
+        }
+
+
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -67,8 +75,8 @@ final class UserViewController: UIViewController {
             await userViewState.loadUser()
         }
         // User の JSON の取得
-        
     }
 }
 
-extension Published.Publisher: @unchecked Sendable {}
+extension Published.Publisher: @unchecked Sendable where Output: Sendable {}
+extension UIImage: @unchecked Sendable {}
