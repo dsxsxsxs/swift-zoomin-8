@@ -1,6 +1,7 @@
 import UIKit
 import Combine
 
+@MainActor
 final class UserViewController: UIViewController {
 
     private let iconImageView: UIImageView = .init()
@@ -47,7 +48,7 @@ final class UserViewController: UIViewController {
         do { // do block to reuse task name.
             let task = Task { [weak self] in
                 guard let state = self?.userViewState else { return }
-                for await user in await state.$user.values {
+                for await user in state.$user.values {
                     self?.nameLabel.text = user?.name
                 }
             }
@@ -58,7 +59,7 @@ final class UserViewController: UIViewController {
             let task = Task { [weak self] in
                 guard let state = self?.userViewState else { return }
                 // don't unwrap self before entering the infinite loop below, or it gonna leak
-                for await icon in await state.$iconImage.values {
+                for await icon in state.$iconImage.values {
                     guard let self = self else { return }
                     self.iconImageView.image = icon
                 }
