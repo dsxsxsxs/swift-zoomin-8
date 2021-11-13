@@ -64,5 +64,3 @@ final class UserViewController: UIViewController {
         // User の JSON の取得
     }
 }
-
-extension Published.Publisher: @unchecked Sendable where Output: Sendable {}
