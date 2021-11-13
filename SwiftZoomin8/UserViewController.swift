@@ -44,20 +44,21 @@ final class UserViewController: UIViewController {
     }
 
     private func setupBindings() {
-        userViewState.$user
-            .receive(on: DispatchQueue.main)
-            .sink(receiveValue: { [weak self] in
-                self?.nameLabel.text = $0?.name
-                self?.title = $0?.name
-            })
-            .store(in: &cancellables)
+        Task {
+            await userViewState.$user
+                .receive(on: DispatchQueue.main)
+                .sink(receiveValue: { [weak self] in
+                    self?.nameLabel.text = $0?.name
+                })
+                .store(in: &cancellables)
 
-        userViewState.$iconImage
-            .receive(on: DispatchQueue.main)
-            .sink(receiveValue: { [weak self] in
-                self?.iconImageView.image = $0
-            })
-            .store(in: &cancellables)
+            await userViewState.$iconImage
+                .receive(on: DispatchQueue.main)
+                .sink(receiveValue: { [weak self] in
+                    self?.iconImageView.image = $0
+                })
+                .store(in: &cancellables)
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
