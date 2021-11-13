@@ -1,13 +1,17 @@
 import UIKit
+import Combine
 
 final class UserViewController: UIViewController {
     let id: User.ID
     
     private let iconImageView: UIImageView = .init()
     private let nameLabel: UILabel = .init()
-    
+
+    private let userViewState: UserViewState
+    private var cancellables = Set<AnyCancellable>()
     init(id: User.ID) {
         self.id = id
+        self.userViewState = .init(id: id)
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -37,37 +41,31 @@ final class UserViewController: UIViewController {
             nameLabel.centerXAnchor.constraint(equalTo: iconImageView.centerXAnchor),
             nameLabel.topAnchor.constraint(equalTo: iconImageView.bottomAnchor, constant: 16),
         ])
+
+        setupBindings()
+    }
+
+    private func setupBindings() {
+        userViewState.$user
+            .receive(on: DispatchQueue.main)
+            .sink(receiveValue: { [weak self] in
+                self?.nameLabel.text = $0?.name
+                self?.title = $0?.name
+            })
+            .store(in: &cancellables)
+
+        userViewState.$iconImage
+            .receive(on: DispatchQueue.main)
+            .sink(receiveValue: { [weak self] in
+                self?.iconImageView.image = $0
+            })
+            .store(in: &cancellables)
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-
+        userViewState.loadUser()
         // User の JSON の取得
-        Task {
-            do {
-                let url: URL = .init(string: "https://koherent.org/fake-service/api/user?id=\(id)")!
-
-                let userData = try await downloadData(from: url)
-                let user: User = try JSONDecoder().decode(User.self, from: userData)
-                // View への反映
-                title = user.name
-                nameLabel.text = user.name
-
-                let iconData = try await downloadData(from: user.iconURL)
-                // Data を UIImage に変換
-                guard let iconImage: UIImage = .init(data: iconData) else {
-                    // エラーハンドリング
-                    print("The icon image at \(user.iconURL) has an illegal format.")
-                    return
-                }
-
-                // View への反映
-                iconImageView.image = iconImage
-            } catch {
-                // エラーハンドリング
-                print(error)
-            }
-
-        }
+        
     }
 }
