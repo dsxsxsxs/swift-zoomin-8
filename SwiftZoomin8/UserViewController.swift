@@ -45,29 +45,15 @@ final class UserViewController: UIViewController {
     }
 
     private func setupBindings() {
-        do { // do block to reuse task name.
-            let task = Task { [weak self] in
-                guard let state = self?.userViewState else { return }
-                for await user in state.$user.values {
-                    self?.nameLabel.text = user?.name
-                }
+        let task = Task { [weak self] in
+            guard let state = self?.userViewState else { return }
+            for await _ in state.objectWillChange.values {
+                guard let self = self else { return }
+                self.nameLabel.text = state.user?.name
+                self.iconImageView.image = state.iconImage
             }
-            cancellables.insert(.init({ task.cancel() }))
         }
-
-        do {
-            let task = Task { [weak self] in
-                guard let state = self?.userViewState else { return }
-                // don't unwrap self before entering the infinite loop below, or it gonna leak
-                for await icon in state.$iconImage.values {
-                    guard let self = self else { return }
-                    self.iconImageView.image = icon
-                }
-            }
-            cancellables.insert(.init({ task.cancel() }))
-        }
-
-
+        cancellables.insert(.init({ task.cancel() }))
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -80,4 +66,3 @@ final class UserViewController: UIViewController {
 }
 
 extension Published.Publisher: @unchecked Sendable where Output: Sendable {}
-extension UIImage: @unchecked Sendable {}
