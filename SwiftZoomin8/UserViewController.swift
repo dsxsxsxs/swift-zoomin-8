@@ -2,15 +2,13 @@ import UIKit
 import Combine
 
 final class UserViewController: UIViewController {
-    let id: User.ID
-    
+
     private let iconImageView: UIImageView = .init()
     private let nameLabel: UILabel = .init()
 
     private let userViewState: UserViewState
-    private var cancellables = Set<AnyCancellable>()
+    private var cancellables: Set<AnyCancellable> = []
     init(id: User.ID) {
-        self.id = id
         self.userViewState = .init(id: id)
         super.init(nibName: nil, bundle: nil)
     }
@@ -64,7 +62,9 @@ final class UserViewController: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        userViewState.loadUser()
+        Task {
+            await userViewState.loadUser()
+        }
         // User の JSON の取得
         
     }
